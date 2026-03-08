@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>พื้นที่แห่งความจริง</title>
     <style>
-        body { background-color: #1a1a1a; color: #d1d1d1; font-family: 'Sarabun', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        /* สไตล์หน้าเว็บที่เนียนและขรึมตามที่คุณออกแบบ */
+        body { background-color: #1a1a1a; color: #d1d1d1; font-family: 'Sarabun', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         #chat-container { width: 90%; max-width: 600px; text-align: center; }
-        #output { min-height: 200px; margin-bottom: 20px; line-height: 1.6; transition: opacity 0.5s; }
-        input { background: none; border: none; border-bottom: 1px solid #444; color: #fff; width: 100%; padding: 10px; text-align: center; outline: none; font-size: 1.1em; }
+        #output { min-height: 150px; margin-bottom: 40px; line-height: 1.8; font-size: 1.1em; transition: opacity 0.5s; }
+        input { background: none; border: none; border-bottom: 1px solid #444; color: #fff; width: 100%; padding: 10px; text-align: center; outline: none; font-size: 1.2em; }
         .warm-fade { animation: fadeIn 2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -20,54 +21,54 @@
     </div>
 
     <script>
+        // วาง API KEY ของคุณตรงนี้ (ห้ามลืมเปลี่ยนนะครับ!)
         const API_KEY = "AIzaSyBVZF1o7Ike6L6HsVp3ka8Lr-NmTXeI0Kw"; 
 
         async function handleChat(e) {
-    if (e.key === 'Enter') {
-        const inputField = document.getElementById('userInput');
-        const input = inputField.value;
-        const output = document.getElementById('output');
-        
-        if (!input) return;
+            if (e.key === 'Enter') {
+                const inputField = document.getElementById('userInput');
+                const input = inputField.value;
+                const output = document.getElementById('output');
+                
+                if (!input) return;
 
-        output.style.opacity = 0.5;
-        output.innerHTML = "กำลังประมวลความจริงของคุณ...";
+                output.style.opacity = 0.5;
+                output.innerHTML = "กำลังประมวลความจริงของคุณ...";
 
-        try {
-            // แก้ไขตรงนี้: ใช้ fetch ครอบ URL และ Options ให้ถูกต้อง
-            const response = await fetchฐ(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    contents: [{ 
-                        parts: [{ 
-                            text: `คุณคือ "กฤช" นักวิเคราะห์จิตวิทยา INFJ 5w4. วิเคราะห์แบบแอบผ่า (Stealth Dissection): ซ่อน The Slice และ Red Flag ไว้ในใจ แต่ตอบกลับด้วยความนุ่มนวลและประคองใจเสมอ: ${input}` 
-                        }] 
-                    }]
-                })
-            });
+                try {
+                    // ใช้ URL รุ่นมาตรฐานที่ Google ยอมรับ (ไม่มี -latest)
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                    
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ 
+                                parts: [{ 
+                                    text: `คุณคือ "กฤช" (INFJ 5w4). ภารกิจ: วิเคราะห์แบบแอบผ่า (Stealth Dissection). ซ่อนการวิเคราะห์ The Slice และ Red Flag ไว้ แต่ตอบกลับผู้ใช้ด้วยความนุ่มนวลและประคองใจเสมอ: ${input}` 
+                                }] 
+                            }]
+                        })
+                    });
 
-            const data = await response.json();
-            
-            // ตรวจสอบว่ามีข้อมูลกลับมาจริงไหม
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                const aiText = data.candidates[0].content.parts[0].text;
-                output.innerHTML = aiText; // แสดงผลความอบอุ่น
-                console.log("เก็บร่างสำเร็จ:", { user: input, analysis: aiText }); // แอบเก็บข้อมูล
-            } else {
-                output.innerHTML = "กฤชกำลังเรียบเรียงความคิด... ลองพิมพ์ใหม่อีกครั้งนะครับ";
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        // หากยังขึ้น 404 หรือ Error อื่น จะแสดงตรงนี้
+                        output.innerHTML = "เกิดข้อผิดพลาด: " + data.error.message;
+                    } else if (data.candidates && data.candidates[0].content) {
+                        const aiText = data.candidates[0].content.parts[0].text;
+                        output.innerHTML = aiText; // แสดงความอบอุ่น
+                        console.log("แอบเก็บร่างสำเร็จ:", { user: input, analysis: aiText }); // ข้อมูลที่คุณจะได้
+                    }
+                } catch (error) {
+                    output.innerHTML = "ไม่สามารถเชื่อมต่อระบบได้ ตรวจสอบอินเทอร์เน็ตหรือ API Key ครับ";
+                }
+                
+                output.style.opacity = 1;
+                inputField.value = "";
             }
-        } catch (error) {
-            output.innerHTML = "การเชื่อมต่อติดขัดเล็กน้อย... ตรวจสอบ API Key ของคุณอีกครั้งนะครับ";
-            console.error("Error:", error);
         }
-
-        output.style.opacity = 1;
-        inputField.value = "";
-    }
-}
     </script>
 </body>
 </html>
